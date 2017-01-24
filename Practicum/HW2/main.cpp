@@ -11,16 +11,6 @@ using namespace std;
 // |     |
 // |     |
 // 3-----4
-//
-// 1 - 2
-// 2 - 1
-// 1 - 3
-// 3 - 1
-// 2 - 4
-// 4 - 2
-// 3 - 4
-// 4 - 3
-
 graph<int> connectedGraph() {
   graph<int> gr;
 
@@ -55,6 +45,28 @@ graph<int> disconnectedGraph() {
 
   gr.addRib(2, 4);
   gr.addRib(4, 2);
+
+  return gr;
+}
+
+//       1
+//     /   \
+//    2     3
+//   / \   / \
+//  4    5    6
+graph<int> acyclicGraph() {
+  graph<int> gr;
+
+  for(int i = 1; i < 7; i++) gr.addTop(i);
+
+  gr.addRib(1, 2);
+  gr.addRib(1, 3);
+
+  gr.addRib(2, 4);
+  gr.addRib(2, 5);
+
+  gr.addRib(3, 5);
+  gr.addRib(3, 6);
 
   return gr;
 }
@@ -135,6 +147,36 @@ void spanningTree(graph<int> &gr) {
   }
 }
 
+bool hasCycle(graph<int> *gr, int inf, list<int> *visited, int previous) {
+  list<int>::iterator findIter = find(visited->begin(), visited->end(), inf);
+  if(inf != previous && findIter != visited->end()) return true;
+
+  visited->push_back(inf);
+
+  for(elem_link1<int> *vertex = gr->point(inf)->link; vertex; vertex = vertex->link) {
+    if(findIter == visited->end()) {
+      if(hasCycle(gr, vertex->inf, visited, inf)) return true;
+    }
+  }
+
+
+  return false;
+}
+
+bool isCyclic(graph<int> &gr) {
+  LList<int> vertexes = gr.vertexes();
+  list<int> visited;
+
+  vertexes.IterStart();
+  for(elem_link1<int> *vertex = vertexes.Iter(); vertex; vertex = vertexes.Iter()) {
+    if(hasCycle(&gr, vertex->inf, &visited, -1)) return true;
+
+    visited.erase(visited.begin(), visited.end());
+  }
+
+  return false;
+}
+
 int main() {
   graph<int> connGraph = connectedGraph();
   graph<int> disconGraph = disconnectedGraph();
@@ -150,8 +192,12 @@ int main() {
 
   // After we remove the ribs of the spanning tree, we expect the connected
   // graph to become disconnected.
-  spanningTree(connGraph);
-  cout<<"Connected graph becomes disconnected: "<<isGraphConnected(connGraph)<<endl;
+  // spanningTree(connGraph);
+  // cout<<"Connected graph becomes disconnected: "<<isGraphConnected(connGraph)<<endl;
+
+  graph<int> acGraph = acyclicGraph();
+  cout<<"Is cyclic connected graph: "<<isCyclic(connGraph)<<endl;
+  cout<<"Is cyclic disconnected graph: "<<isCyclic(acGraph)<<endl;
 
   return 0;
 }
